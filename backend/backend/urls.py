@@ -21,8 +21,10 @@ from tourguide import views
 
 router = routers.DefaultRouter()
 router.register(r"locations", views.LocationView, 'Locations')
+router.register(r"tours", views.TourView, 'Tours')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
+    path('get_tour/<int:tour_id>/', views.get_tour, name='get_tour')
 ]

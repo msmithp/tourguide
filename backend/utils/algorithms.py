@@ -145,6 +145,7 @@ def nearest_neighbor(distances: np.ndarray, start: int=0) -> tuple[list, float]:
         :return:            A tuple containing a list of the indices of 
                             the vertices in the order they are visited and
                             the total cost of thr tour"""
+    
     # all cities except `start` are initialized as False (unvisited)
     visited = [False for _ in distances]
     visited[start] = True
