@@ -20,11 +20,13 @@ from rest_framework import routers
 from tourguide import views
 
 router = routers.DefaultRouter()
-router.register(r"locations", views.LocationView, 'Locations')
+router.register(r"locations", views.LocationView, 'Locations')  # TODO: remove
 router.register(r"tours", views.TourView, 'Tours')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
-    path('get_tour/<int:tour_id>/', views.get_tour, name='get_tour')
+    path('api/get_tour/<int:tour_id>/', views.get_tour, name='get_tour'),
+    path('api/delete_tour/<int:tour_id>/', views.delete_tour, name='delete_tour'),
+    path('api/add_to_tour/', views.add_to_tour, name='add_to_tour'),
 ]

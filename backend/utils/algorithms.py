@@ -4,7 +4,8 @@ import itertools
 import sys
 
 
-def calculate_tour(distances: np.ndarray, start: int=0) -> tuple[list, float]:
+def calculate_tour(data: dict, start: int) -> tuple[list, float]:
+    distances, ids = make_distance_matrix(data)
     n = len(distances)
 
     # greatest number of locations for which Held-Karp will be used
@@ -13,20 +14,21 @@ def calculate_tour(distances: np.ndarray, start: int=0) -> tuple[list, float]:
     if n == 1:
         return ([0], 0.0)
     elif n <= CUTOFF:
-        return held_karp(distances, start)
+        return held_karp(distances, ids, start)
     else:
-        return nearest_neighbor(distances, start)
+        return nearest_neighbor(distances, ids, start)
 
 
-def held_karp(distances: np.ndarray, start: int=0) -> tuple[list, float]:
-    """ Held-Karp algorithm to find the optimal tour through the vertices of a graph
-        and the total cost of the tour
+def held_karp(distances: np.ndarray, ids: np.ndarray, start: int) -> tuple[list, float]:
+    """ Held-Karp algorithm to find the optimal tour through the vertices of a
+        strongly connected graph and the total cost of the tour
         
         :param distances:   Distance matrix representation of a graph 
-        :param start:       Index of the starting vertex, 0 by default
+        :param start:       ID of the starting vertex
+        :param ids:         IDs of each location
         :return:            A tuple containing a list of the indices of 
                             the vertices in the order they are visited and
-                            the total cost of thr tour"""
+                            the total cost of the tour """
     
     # number of cities in tour
     n = len(distances)
@@ -86,13 +88,13 @@ def held_karp(distances: np.ndarray, start: int=0) -> tuple[list, float]:
     # find shortest path through all cities (excluding `start`) to `start`
     for v in range(1, n):
         new_cost = opt[(cities_bitmask, v)][0] + distances[0][v]
-        
+
         if new_cost < min_cost:
             min_cost = new_cost
             previous_city = v
 
     # reconstruct path
-    tour = [previous_city]  # start with last city visited
+    tour = [ids[previous_city]]  # start with last city visited
     while cities_bitmask > 0:
         # remove previous_city from the bitmask
         new_mask = cities_bitmask & (~(1 << previous_city))
@@ -101,14 +103,15 @@ def held_karp(distances: np.ndarray, start: int=0) -> tuple[list, float]:
         _, previous_city = opt[(cities_bitmask, previous_city)]
         
         # insert next-latest city at index 0
-        tour.insert(0, previous_city)
+        tour.insert(0, ids[previous_city])
 
         # re-assign bitmask to new mask and iterate
         cities_bitmask = new_mask
 
     # since TSP solution is a Hamiltonian cycle, starting location is
     # arbitrary - we simply rotate the list to get the right starting point
-    tour = np.roll(tour, -tour.index(start)).tolist()
+    tour = rotate(tour, -tour.index(start))
+    tour = list(map(int, tour))
 
     return tour, min_cost
 
@@ -121,44 +124,34 @@ def to_bitmask(combination: tuple[int]):
         # e.g., (2, 5, 6, 7) returns `0b11100100`
         mask |= 1 << bit
 
-    return mask
+    return mask 
 
 
-def make_distance_matrix(vertices: dict) -> tuple[np.ndarray, np.ndarray]:
-    """ Creates a matrix of distances given a dictionary of names and coordinates """
-    names = np.array(list(vertices.keys()))
-    dists = np.zeros(shape=(len(vertices), len(vertices)))
-
-    for i, (lat1, long1) in enumerate(vertices.values()):
-        for j, (lat2, long2) in enumerate(vertices.values()):
-            dists[i][j] = haversine(lat1, long1, lat2, long2)
-
-    return dists, names    
-
-
-def nearest_neighbor(distances: np.ndarray, start: int=0) -> tuple[list, float]:
+def nearest_neighbor(distances: np.ndarray, ids: np.ndarray, start: int) -> tuple[list, float]:
     """ Nearest Neighbor algorithm to approximate the optimal tour and the 
-        length of the shortest tour of a graph
+        length of the shortest tour of a strongly connected graph
         
         :param distances:   Distance matrix representation of a graph 
-        :param start:       Index of the starting vertex, 0 by default
+        :param ids:         IDs of the locations
+        :param start:       ID of the starting vertex
         :return:            A tuple containing a list of the indices of 
                             the vertices in the order they are visited and
-                            the total cost of thr tour"""
+                            the total cost of the tour"""
     
     # all cities except `start` are initialized as False (unvisited)
     visited = [False for _ in distances]
-    visited[start] = True
+    start_index = np.where(ids == start)[0][0]  # get index of starting city
+    visited[start_index] = True
 
     # `start` is the first city
-    current = start
-    tour = [start]
+    current = start_index
+    tour = [start_index]
     tour_length = 0
 
     # iterate until all cities have been visited
     while False in visited:
-        min_edge = sys.maxsize
-        min_index = 0
+        min_edge = sys.maxsize  # lowest edge weight
+        min_index = 0           # index of edge with lowest weight
 
         # find the minimum edge that connects current city to some unvisited city
         for i, edge in enumerate(distances[current]):
@@ -177,13 +170,29 @@ def nearest_neighbor(distances: np.ndarray, start: int=0) -> tuple[list, float]:
         visited[current] = True
 
     # add distance from last visited city to start
-    tour_length += distances[tour[-1]][start]
+    tour_length += distances[tour[-1]][start_index]
+
+    # map location IDs onto indices of tour so that final tour is in terms of
+    # IDs and not indices 0 through n
+    tour = list(map(lambda x: int(ids[x]), tour))
     
     return tour, tour_length
 
 
+def make_distance_matrix(vertices: dict) -> tuple[np.ndarray, np.ndarray]:
+    """ Creates a matrix of distances given a dictionary of names and coordinates """
+    names = np.array(list(vertices.keys()))
+    dists = np.zeros(shape=(len(vertices), len(vertices)))
+
+    for i, (lat1, long1) in enumerate(vertices.values()):
+        for j, (lat2, long2) in enumerate(vertices.values()):
+            dists[i][j] = haversine(lat1, long1, lat2, long2)
+
+    return dists, names
+
+
 def haversine(lat1: float, long1: float, lat2: float, long2: float) -> float:
-    """ Get the great-circle distance in miles between two latitude/longitude pairs. """
+    """ Get the great-circle distance in miles between two latitude/longitude pairs """
     RADIUS = 3958.8  # Radius of Earth in miles
     to_rad = math.pi / 180
 
@@ -192,3 +201,9 @@ def haversine(lat1: float, long1: float, lat2: float, long2: float) -> float:
         + math.cos(lat1 * to_rad) * math.cos(lat2 * to_rad) *
         (1 - math.cos((long2 - long1) * to_rad)) / 2
     ))
+
+
+def rotate(l: list, n: int) -> list:
+    """ Rotate a list `n` numbers to the right (or left, if `n` is negative) """
+    amt = n % len(l)
+    return l[amt:] + l[:amt]
