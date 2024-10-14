@@ -42,7 +42,8 @@ function SearchForm() {
         
         // axios.post("http://127.0.0.1:8000/api/tours/", {name: query, created: currentTime()});
         // axios.delete("http://127.0.0.1:8000/api/delete_tour/3/")
-        axios.post("http://127.0.0.1:8000/api/add_to_tour/", {tour_id: 1, location_id: 5})
+        // axios.post("http://127.0.0.1:8000/api/add_to_tour/", {tour_id: 1, location_id: 2})
+        axios.post("http://127.0.0.1:8000/api/remove_from_tour/", {tour_id: 1, location_id: 2})
         // axios.post("http://127.0.0.1:8000/api/locations/", {name: query, address: "test", latitude: -1.0, longitude: -1.0})
     }
 

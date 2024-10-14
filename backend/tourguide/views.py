@@ -4,6 +4,7 @@ from .models import Location, Tour, TourLocation
 from utils.algorithms import calculate_tour
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Min
 import json
 
 # Create your views here.
@@ -66,8 +67,8 @@ def add_to_tour(request):
         the location's ID """
     # Load data - `request.body` consists of a tour ID and location ID
     data = json.loads(request.body)
-    tour_id = data.get('tour_id')
-    location_id = data.get('location_id')
+    tour_id = data.get("tour_id")
+    location_id = data.get("location_id")
 
     # Get all locations in tour
     locs = TourLocation.objects.select_related("location").filter(tour=tour_id)
@@ -93,20 +94,59 @@ def add_to_tour(request):
 
     # Update indices in database
     for index, id in enumerate(order):
-        l = TourLocation.objects.get(location=id)
+        l = TourLocation.objects.get(tour_id=tour_id, location_id=id)
         l.index = index
         l.save()
 
     return HttpResponse(status=200)
 
 
-def remove_from_tour(request, data):
+@csrf_exempt
+def remove_from_tour(request):
     """ API endpoint to remove a location from a tour given the tour's ID 
         and the location's ID """
-    # TODO: We will re-calculate the tour here
-    # TODO: Check if location is present in any other tours. If not, delete it from
-    #       the locations table
-    pass
+    # Load data - `request.body` consists of a tour ID and location ID
+    data = json.loads(request.body)
+    tour_id = data.get("tour_id")
+    location_id = data.get("location_id")
+
+    # Get all locations in tour
+    locs = TourLocation.objects.select_related("location").filter(tour=tour_id)
+
+    # Check if location is in tour
+    if not locs.filter(location_id=location_id).exists():
+        # Location is not in tour, so no re-calculation is necessary
+        return HttpResponse(status=200)
+    
+    # Remove location from TourLocation table
+    TourLocation.objects.get(tour_id=tour_id, location_id=location_id).delete()
+
+    # Check if any other tours include this location
+    if not TourLocation.objects.filter(location_id=location_id).exists():
+        # No other tours include this location, so we can delete it from the database
+        Location.objects.get(pk=location_id).delete()
+
+    # Turn locations into dictionary of the format: {location_id: (latitude, longitude)}
+    locs_dict = {
+        l.location.pk: (float(l.location.latitude), float(l.location.longitude)) 
+        for l in locs
+    }
+
+    # `start` is the location with the lowest index; if index 0 is the location
+    # that was removed, then index 1 is the new start
+    start = locs.get(index=locs.aggregate(Min("index"))["index__min"]).location.pk
+
+    # Re-calculate tour with new location added
+    order, _ = calculate_tour(locs_dict, start)
+    print(order)
+
+    # Update indices in database
+    for index, id in enumerate(order):
+        l = TourLocation.objects.get(tour_id=tour_id, location_id=id)
+        l.index = index
+        l.save()
+
+    return HttpResponse(status=200)
 
 
 def search_location(request, data):

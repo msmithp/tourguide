@@ -11,8 +11,10 @@ def calculate_tour(data: dict, start: int) -> tuple[list, float]:
     # greatest number of locations for which Held-Karp will be used
     CUTOFF = 15
 
-    if n == 1:
-        return ([0], 0.0)
+    if n <= 0:
+        return ([], 0.0)
+    elif n == 1:
+        return ([start], 0.0)
     elif n <= CUTOFF:
         return held_karp(distances, ids, start)
     else:
@@ -206,4 +208,4 @@ def haversine(lat1: float, long1: float, lat2: float, long2: float) -> float:
 def rotate(l: list, n: int) -> list:
     """ Rotate a list `n` numbers to the right (or left, if `n` is negative) """
     amt = n % len(l)
-    return l[amt:] + l[:amt]
+    return l[-amt:] + l[:-amt]
