@@ -56,6 +56,7 @@ def delete_tour(request, tour_id):
         table given its ID """
     # Delete tour with the given ID from the database
     Tour.objects.filter(pk=tour_id).delete()
+    TourLocation.objects.filter(tour_id=tour_id).delete()
 
     return HttpResponse(status=200)
 
@@ -170,7 +171,32 @@ def search_location(request, query):
     return JsonResponse(as_dict)
 
 
-def add_location(request, data):
+@csrf_exempt
+def add_location(request):
     """ API endpoint to add a new location into the Locations table
         only if it does not already exist """
-    pass
+    # Load data - `request.body` contains location info
+    loc_data = json.loads(request.body)
+    loc = None
+
+    # Test if location is already in database
+    try:
+        # Assume if two locations have the same exact latitude and longitude, they are the same
+        loc = Location.objects.get(latitude=loc_data["latitude"], longitude=loc_data["longitude"])
+    except:
+        # Location is not yet in the database, so add it
+        loc = Location(name=loc_data["name"], address=loc_data["address"], 
+                       latitude=loc_data["latitude"], longitude=loc_data["longitude"])
+        loc.save()
+
+    # Put location data into dictionary and return it as JSON
+    loc_dict = {
+        "id": loc.pk,
+        "name": loc.name,
+        "address": loc.address,
+        "latitude": loc.latitude,
+        "longitude": loc.longitude
+    }
+
+    return JsonResponse(loc_dict)
+

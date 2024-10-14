@@ -36,8 +36,10 @@ function currentTime() {
 
 function SearchForm() {
     const [query, setQuery] = useState("");
+    // const [loc, setLoc] = useState({});
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
+        // TODO: handle blank input
         event.preventDefault();
         
         // axios.post("http://127.0.0.1:8000/api/tours/", {name: query, created: currentTime()});
@@ -47,13 +49,26 @@ function SearchForm() {
         // axios.post("http://127.0.0.1:8000/api/locations/", {name: query, address: "test", latitude: -1.0, longitude: -1.0})
 
         // axios.get("http://127.0.0.1:8000/api/search/" + query + '/')
-        // .then((res) => console.log(JSON.stringify(res.data)))
+        // .then((res) => setLoc(res.data.data[0]))
         // .catch((err) => console.log(err));
+
+        var loc = await axios.get("http://127.0.0.1:8000/api/search/" + query + '/');
+
+        var loc_data = {
+            name: loc.data.data[0].name,
+            address: loc.data.data[0].display_name,
+            latitude: loc.data.data[0].lat,
+            longitude: loc.data.data[0].lon
+        }
+
+        axios.post("http://127.0.0.1:8000/api/add_location/", loc_data)
+        .then((res) => console.log(res))
+        .catch((err) => console.log(err));
     }
 
     return (
         <form onSubmit={handleSubmit}>
-            <label>Enter tour name: 
+            <label>Enter location to add:
                 <input type="text" value={query} onChange={(e) => setQuery(e.target.value)}/>
             </label>
             <input type="submit" />
