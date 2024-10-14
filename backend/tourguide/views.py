@@ -6,6 +6,7 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Min
 import json
+import requests
 
 # Create your views here.
 class LocationView(viewsets.ModelViewSet):
@@ -22,8 +23,6 @@ class TourView(viewsets.ModelViewSet):
 def get_tour(request, tour_id):
     """ API endpoint to retrieve the name, time created, and locations
         of a tour given its ID """
-    # Example URL: http://127.0.0.1:8000/api/get_tour/1/
-
     # Get location objects and tour object for specified tour
     locs = TourLocation.objects.select_related("location").filter(tour=tour_id)
     tour = Tour.objects.get(pk=tour_id)
@@ -41,7 +40,7 @@ def get_tour(request, tour_id):
     # Sort locations on index
     locations = sorted(locations, key=lambda x: x["index"])
 
-    # Create respone dictionary
+    # Create response dictionary
     res = {
         "name": tour.name,
         "created": tour.created,
@@ -138,7 +137,6 @@ def remove_from_tour(request):
 
     # Re-calculate tour with new location added
     order, _ = calculate_tour(locs_dict, start)
-    print(order)
 
     # Update indices in database
     for index, id in enumerate(order):
@@ -149,10 +147,27 @@ def remove_from_tour(request):
     return HttpResponse(status=200)
 
 
-def search_location(request, data):
+def search_location(request, query):
     """ API endpoint to use the Nominatim API to search for a location by 
         name and return a dictionary containing 5 candidates """
-    pass
+    # Base URL for API
+    url = "https://nominatim.openstreetmap.org/search"
+
+    # Parameters and headers for API call
+    params = {"q": query,               # search query
+            "format": "json",           # return in json format
+            "accept-language": "en",    # return results in English
+            "limit": 5,                 # max number of results returned
+    }
+    headers = {"User-Agent": "TourGuide"}
+
+    # Make API call
+    response = requests.get(url, params=params, headers=headers)
+
+    # Wrap response in a dictionary for JSON serialization
+    as_dict = {"data": response.json()}
+
+    return JsonResponse(as_dict)
 
 
 def add_location(request, data):
