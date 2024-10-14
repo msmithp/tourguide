@@ -21,11 +21,13 @@ class TourView(viewsets.ModelViewSet):
 def get_tour(request, tour_id):
     """ API endpoint to retrieve the name, time created, and locations
         of a tour given its ID """
+    # Example URL: http://127.0.0.1:8000/api/get_tour/1/
+
+    # Get location objects and tour object for specified tour
     locs = TourLocation.objects.select_related("location").filter(tour=tour_id)
     tour = Tour.objects.get(pk=tour_id)
 
-    # TODO: sort locs in order of indices in tour before creating dict
-    # http://127.0.0.1:8000/get_tour/1/
+    # Create locations list
     locations = [
         {"id": x.location.pk,
          "name": x.location.name,
@@ -35,6 +37,10 @@ def get_tour(request, tour_id):
          "index": x.index} for x in locs
     ]
 
+    # Sort locations on index
+    locations = sorted(locations, key=lambda x: x["index"])
+
+    # Create respone dictionary
     res = {
         "name": tour.name,
         "created": tour.created,
@@ -48,7 +54,9 @@ def get_tour(request, tour_id):
 def delete_tour(request, tour_id):
     """ API endpoint to delete a tour from the Tour table and TourLocation
         table given its ID """
+    # Delete tour with the given ID from the database
     Tour.objects.filter(pk=tour_id).delete()
+
     return HttpResponse(status=200)
 
 
@@ -56,26 +64,31 @@ def delete_tour(request, tour_id):
 def add_to_tour(request):
     """ API endpoint to add a location to a tour given the tour's ID and
         the location's ID """
-    # Load data
+    # Load data - `request.body` consists of a tour ID and location ID
     data = json.loads(request.body)
     tour_id = data.get('tour_id')
     location_id = data.get('location_id')
 
+    # Get all locations in tour
+    locs = TourLocation.objects.select_related("location").filter(tour=tour_id)
+    
+    # Check if location is already in tour
+    if locs.filter(location_id=location_id).exists():
+        # Location is already in tour, so no re-calculation is necessary
+        return HttpResponse(status=200)
+    
     # Add location to tour with placeholder index
     new_tour_loc = TourLocation(tour_id=tour_id, location_id=location_id, index=-1)
     new_tour_loc.save()
 
-    # Get locations in tour
-    locs = TourLocation.objects.select_related("location").filter(tour=tour_id)
-    new_loc = Location.objects.get(pk=location_id)
-
-    # Turn locations into dictionary
-    locs_dict = {l.location.pk: (float(l.location.latitude), float(l.location.longitude)) for l in locs}
-    locs_dict[new_loc.pk] = (float(new_loc.latitude), float(new_loc.longitude))
-    print(locs_dict)
+    # Turn locations into dictionary of the format: {location_id: (latitude, longitude)}
+    locs_dict = {
+        l.location.pk: (float(l.location.latitude), float(l.location.longitude)) 
+        for l in locs
+    }
 
     # Re-calculate tour with new location added
-    start = TourLocation.objects.select_related("location").get(tour=tour_id, index=0).location.pk
+    start = locs.get(index=0).location.pk
     order, _ = calculate_tour(locs_dict, start)
 
     # Update indices in database
