@@ -1,4 +1,4 @@
-import React, { Component, useState } from "react";
+import React, { useState } from "react";
 import './App.css';
 import axios from "axios";
 
@@ -76,43 +76,34 @@ function SearchForm() {
     )
 }
 
-class App extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            tours: [],
-            currentTour: -1,
-            locations: []
-        };
-    }
+export default function App() {
+    const [tours, setTours] = useState([]);
+    const [currentTour, setCurrentTour] = useState(-1);
+    const [locations, setLocations] = useState([]);
 
-    getTours = () => {
+    const getTours = () => {
         axios.get("http://127.0.0.1:8000/api/tours/")
         .then((res) => this.setState({tours: JSON.stringify(res.data)}))
         .catch((err) => console.log(err));
     }
 
-    getATour = () => {
+    const getATour = () => {
         // code here to retrieve a tour
 
     }
 
-    render () {
-        return (
-            <main>
-                <h2>Create tour</h2>
-                <SearchForm />
-                <button onClick={this.getTours}>
-                    Show tours
-                </button>
-                <p>{this.state.tours}</p>
-                <button onClick={this.getATour}>
-                    Show a tour
-                </button>
-                <p>{this.state.currentTour}</p>
-            </main>
-        )
-    }
+    return (
+        <main>
+            <h2>Create tour</h2>
+            <SearchForm />
+            <button onClick={getTours}>
+                Show tours
+            </button>
+            <p>{tours}</p>
+            <button onClick={getATour}>
+                Show a tour
+            </button>
+            <p>{currentTour}</p>
+        </main>
+    )
 }
-
-export default App;
