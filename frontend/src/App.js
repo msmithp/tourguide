@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import './App.css';
+import "./App.css";
 import axios from "axios";
 
 const sampleLocations = [
@@ -34,6 +34,15 @@ function currentTime() {
 }
 
 
+function Sidebar({ children }) {
+    return (
+        <div> {/* TODO: add CSS class */}
+            {children}
+        </div>
+    )
+}
+
+
 function SearchForm() {
     const [query, setQuery] = useState("");
     // const [loc, setLoc] = useState({});
@@ -52,18 +61,18 @@ function SearchForm() {
         // .then((res) => setLoc(res.data.data[0]))
         // .catch((err) => console.log(err));
 
-        var loc = await axios.get("http://127.0.0.1:8000/api/search/" + query + '/');
+        // var loc = await axios.get("http://127.0.0.1:8000/api/search/" + query + '/');
 
-        var loc_data = {
-            name: loc.data.data[0].name,
-            address: loc.data.data[0].display_name,
-            latitude: loc.data.data[0].lat,
-            longitude: loc.data.data[0].lon
-        }
+        // var loc_data = {
+        //     name: loc.data.data[0].name,
+        //     address: loc.data.data[0].display_name,
+        //     latitude: loc.data.data[0].lat,
+        //     longitude: loc.data.data[0].lon
+        // }
 
-        axios.post("http://127.0.0.1:8000/api/add_location/", loc_data)
-        .then((res) => console.log(res))
-        .catch((err) => console.log(err));
+        // axios.post("http://127.0.0.1:8000/api/add_location/", loc_data)
+        // .then((res) => console.log(res))
+        // .catch((err) => console.log(err));
     }
 
     return (
@@ -76,34 +85,61 @@ function SearchForm() {
     )
 }
 
+
+function LocationList({ locations }) {
+    const listItems = locations.map(loc => 
+        <li key={loc.id}>
+            <LocationCard 
+                name={loc.name}
+                address={loc.address}
+                latitude={loc.latitude}
+                longitude={loc.longitude}
+            />
+        </li>
+    );
+
+    return (
+        <div> {/* TODO: add CSS class */}
+            <ul>{listItems}</ul>    
+        </div>
+    );
+}
+
+
+function LocationCard({ name, address, latitude, longitude }) {
+    return (
+        <div> {/* TODO: add CSS class */}
+            <h5>{name}</h5>
+            <p>{address}<br />{latitude}, {longitude}</p>
+            <button>Remove</button>
+        </div>
+    );
+}
+
+
 export default function App() {
     const [tours, setTours] = useState([]);
-    const [currentTour, setCurrentTour] = useState(-1);
+    const [currentTour, setCurrentTour] = useState(0);
     const [locations, setLocations] = useState([]);
 
     const getTours = () => {
         axios.get("http://127.0.0.1:8000/api/tours/")
-        .then((res) => this.setState({tours: JSON.stringify(res.data)}))
+        .then((res) => setTours(res.data))
         .catch((err) => console.log(err));
-    }
+    };
 
     const getATour = () => {
         // code here to retrieve a tour
 
-    }
+    };
 
     return (
         <main>
-            <h2>Create tour</h2>
-            <SearchForm />
-            <button onClick={getTours}>
-                Show tours
-            </button>
-            <p>{tours}</p>
-            <button onClick={getATour}>
-                Show a tour
-            </button>
-            <p>{currentTour}</p>
+            <h1>tourguide</h1>
+            <Sidebar>
+                <SearchForm />
+                <LocationList locations={sampleLocations} />
+            </Sidebar>
         </main>
-    )
+    );
 }
