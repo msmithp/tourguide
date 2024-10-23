@@ -5,7 +5,7 @@ export default function LocationCard({ name, address, latitude, longitude }) {
     return (
         <div> {/* TODO: add CSS class */}
             <h5>{name}</h5>
-            <p>{address}<br />{latitude}, {longitude}  {/*<button>Remove</button>*/}</p>
+            <p>{address}<br />{latitude}, {longitude}</p>
         </div>
     );
 }
