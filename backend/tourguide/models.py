@@ -12,7 +12,7 @@ class Location(models.Model):
 
 class Tour(models.Model):
     name = models.CharField(max_length=100)
-    created = models.DateTimeField()
+    created = models.DateTimeField(auto_now_add=True)
     locations = models.ManyToManyField(Location, through="TourLocation")
 
     def __str__(self):

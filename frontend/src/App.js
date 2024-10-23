@@ -1,6 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 import axios from "axios";
+import { Modal } from "react-bootstrap";
+import LocationRadio from "./components/radio.js";
+import LocationCard from "./components/locationCard.js"
+
 
 const sampleLocations = [
     {
@@ -29,8 +33,25 @@ const sampleLocations = [
 
 function currentTime() {
     var date = new Date();
-    return "" + date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() 
-        + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+    return "" + date.getFullYear() + "-" + ('0' + (date.getMonth() + 1)).slice(-2) + "-" 
+        + ('0' + date.getDate()).slice(-2) + " " + ('0' + date.getHours()).slice(-2) 
+        + ":" + ('0' + date.getMinutes()).slice(-2) 
+        + ":" + ('0' + date.getSeconds()).slice(-2);
+}
+
+
+function Dropdown({ tours=[], handler }) {
+    const selectItems = tours.map(t =>
+        <option key={t.id} value={t.id}>{t.name}</option>
+    );
+
+    return (
+        <div> {/* TODO: add CSS class */}
+            <select name="selectedTour" onChange={e => handler(e.target.value)}>
+                {selectItems}
+            </select>
+        </div>
+    )
 }
 
 
@@ -43,42 +64,16 @@ function Sidebar({ children }) {
 }
 
 
-function SearchForm() {
-    const [query, setQuery] = useState("");
-    // const [loc, setLoc] = useState({});
-
-    const handleSubmit = async (event) => {
-        // TODO: handle blank input
-        event.preventDefault();
-        
-        // axios.post("http://127.0.0.1:8000/api/tours/", {name: query, created: currentTime()});
-        // axios.delete("http://127.0.0.1:8000/api/delete_tour/3/")
-        // axios.post("http://127.0.0.1:8000/api/add_to_tour/", {tour_id: 1, location_id: 2})
-        // axios.post("http://127.0.0.1:8000/api/remove_from_tour/", {tour_id: 1, location_id: 2})
-        // axios.post("http://127.0.0.1:8000/api/locations/", {name: query, address: "test", latitude: -1.0, longitude: -1.0})
-
-        // axios.get("http://127.0.0.1:8000/api/search/" + query + '/')
-        // .then((res) => setLoc(res.data.data[0]))
-        // .catch((err) => console.log(err));
-
-        // var loc = await axios.get("http://127.0.0.1:8000/api/search/" + query + '/');
-
-        // var loc_data = {
-        //     name: loc.data.data[0].name,
-        //     address: loc.data.data[0].display_name,
-        //     latitude: loc.data.data[0].lat,
-        //     longitude: loc.data.data[0].lon
-        // }
-
-        // axios.post("http://127.0.0.1:8000/api/add_location/", loc_data)
-        // .then((res) => console.log(res))
-        // .catch((err) => console.log(err));
+function SearchForm({ handler }) {
+    function handleSubmit(event) {
+        event.preventDefault();  // prevent redirect
+        handler(event.target[0].value);  // send query to handler
     }
 
     return (
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={(e) => handleSubmit(e)}>
             <label>Enter location to add:
-                <input type="text" value={query} onChange={(e) => setQuery(e.target.value)}/>
+                <input type="text"/>
             </label>
             <input type="submit" />
         </form>
@@ -86,15 +81,20 @@ function SearchForm() {
 }
 
 
-function LocationList({ locations }) {
+function LocationList({ locations, handler }) {
+    if (locations == null) {  // TODO: Handle empty case (prompt user to select a tour)
+        return <div></div>
+    }
+
     const listItems = locations.map(loc => 
-        <li key={loc.id}>
+        <li key={loc.id} value={loc.id}>
             <LocationCard 
                 name={loc.name}
                 address={loc.address}
                 latitude={loc.latitude}
                 longitude={loc.longitude}
             />
+            <button>Remove</button>
         </li>
     );
 
@@ -106,39 +106,97 @@ function LocationList({ locations }) {
 }
 
 
-function LocationCard({ name, address, latitude, longitude }) {
+function LocationSelection({ locations, handler }){
     return (
-        <div> {/* TODO: add CSS class */}
-            <h5>{name}</h5>
-            <p>{address}<br />{latitude}, {longitude}</p>
-            <button>Remove</button>
+        <div>
+            <LocationRadio locations={locations} handler={handler} />
         </div>
-    );
+    )
 }
 
 
 export default function App() {
     const [tours, setTours] = useState([]);
-    const [currentTour, setCurrentTour] = useState(0);
-    const [locations, setLocations] = useState([]);
+    const [currentTour, setCurrentTour] = useState({});
+    const [searchModalIsOpen, setSearchModalIsOpen] = useState(false);
+    const [searchLocations, setSearchLocations] = useState([]);
 
-    const getTours = () => {
+    console.log("Rerendering: " + currentTime() + "\nCurrent tour: " + currentTour.name
+                + "\nsearchLocations: " + JSON.stringify(searchLocations));
+
+    useEffect(() => {
+        let ignore = false;
+        setTours([])
         axios.get("http://127.0.0.1:8000/api/tours/")
-        .then((res) => setTours(res.data))
+        .then(res => {
+            if (!ignore) {
+                setTours(res.data);
+            }
+        });
+
+        return () => {
+            ignore = true;
+        }
+    }, []);
+
+    function handleDropdownChange(key) {
+        axios.get("http://127.0.0.1:8000/api/get_tour/" + key + '/')
+        .then(res => setCurrentTour(res.data))
+        .catch(err => console.log(err));
+    }
+
+    function handleGetLocations(query) {
+        if (query == "") {
+            // Ignore blank queries
+            return;
+        }
+
+        setSearchLocations([]);
+
+        axios.get("http://127.0.0.1:8000/api/search/" + query + '/')
+        .then((res) => setSearchLocations(res.data.data))
         .catch((err) => console.log(err));
-    };
 
-    const getATour = () => {
-        // code here to retrieve a tour
+        setSearchModalIsOpen(true);
+    }
 
-    };
+    function handleAddToTour(location_id) {
+        // code here to handle adding a location to a tour...
+        console.log("Adding " + searchLocations[location_id] + " to tour " + currentTour.id);
+    }
+
+    function handleRemoveFromTour(tour_id, location_id) {
+        // code here to remove a location from tour...
+        console.log("Removing location " + location_id + " from " + tour_id);
+    }
+
+    // function getATour(tourID) {
+    //     axios.get("http://127.0.0.1:8000/api/get_tour/" + tourID + '/')
+    //     .then(res => setCurrentTour(res.data))
+    //     .catch(err => console.log(err));
+    // }
+
+    const handleSearchModalClose = () => setSearchModalIsOpen(false);
 
     return (
         <main>
             <h1>tourguide</h1>
+            <Modal show={searchModalIsOpen} onHide={handleSearchModalClose}>
+                <LocationSelection 
+                    locations={searchLocations} 
+                    handler={handleAddToTour}
+                />
+            </Modal>
+            <Dropdown 
+                tours={tours}
+                handler={handleDropdownChange}
+            />
             <Sidebar>
-                <SearchForm />
-                <LocationList locations={sampleLocations} />
+                <SearchForm handler={handleGetLocations}/>
+                <LocationList
+                    locations={currentTour.locations}
+                    handler={handleRemoveFromTour} 
+                />
             </Sidebar>
         </main>
     );

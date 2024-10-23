@@ -32,4 +32,5 @@ urlpatterns = [
     path('api/remove_from_tour/', views.remove_from_tour, name='remove_from_tour'),
     path('api/search/<str:query>/', views.search_location, name='search'),
     path('api/add_location/', views.add_location, name='add_location'),
+    path('api/create_tour/', views.create_tour, name='create_tour'),
 ]

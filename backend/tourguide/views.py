@@ -20,6 +20,19 @@ class TourView(viewsets.ModelViewSet):
     queryset = Tour.objects.all()
 
 
+def create_tour(request):
+    """ API endpoint to create a tour given the new tour's name """
+    # Load data - `request.body` consists of a tour name
+    data = json.loads(request.body)
+    tour_name = data.get("name")
+
+    # Create new tour with given name
+    new_tour = Tour(name=tour_name)
+    new_tour.save()
+
+    return HttpResponse(status=200)
+
+
 def get_tour(request, tour_id):
     """ API endpoint to retrieve the name, time created, and locations
         of a tour given its ID """
@@ -42,6 +55,7 @@ def get_tour(request, tour_id):
 
     # Create response dictionary
     res = {
+        "id": tour.pk,
         "name": tour.name,
         "created": tour.created,
         "locations": locations
@@ -163,10 +177,18 @@ def search_location(request, query):
     headers = {"User-Agent": "TourGuide"}
 
     # Make API call
-    response = requests.get(url, params=params, headers=headers)
+    response = requests.get(url, params=params, headers=headers).json()
+
+    locations = [
+        {"id": i,
+         "name": loc["name"],
+         "address": loc["display_name"],
+         "latitude": loc["lat"],
+         "longitude": loc["lon"]} for i, loc in enumerate(response)
+    ]
 
     # Wrap response in a dictionary for JSON serialization
-    as_dict = {"data": response.json()}
+    as_dict = {"data": locations}
 
     return JsonResponse(as_dict)
 
