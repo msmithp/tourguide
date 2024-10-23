@@ -146,6 +146,7 @@ export default function App() {
     }
 
     function handleGetLocations(query) {
+        // Don't spam the button or something bad might happen
         if (query == "") {
             // Ignore blank queries
             return;
@@ -161,20 +162,19 @@ export default function App() {
     }
 
     function handleAddToTour(location_id) {
-        // code here to handle adding a location to a tour...
-        console.log("Adding " + searchLocations[location_id] + " to tour " + currentTour.id);
+        console.log("Adding " + JSON.stringify(searchLocations[location_id]) + " to tour " + currentTour.id);
+        
+        axios.post("http://127.0.0.1:8000/api/add_location/", searchLocations[location_id])
+        .then((res) => axios.post("http://127.0.0.1:8000/api/add_to_tour/", 
+            {tour_id: currentTour.id, location_id: res.data.id}));
+        
+        setSearchModalIsOpen(false);
     }
 
     function handleRemoveFromTour(tour_id, location_id) {
         // code here to remove a location from tour...
         console.log("Removing location " + location_id + " from " + tour_id);
     }
-
-    // function getATour(tourID) {
-    //     axios.get("http://127.0.0.1:8000/api/get_tour/" + tourID + '/')
-    //     .then(res => setCurrentTour(res.data))
-    //     .catch(err => console.log(err));
-    // }
 
     const handleSearchModalClose = () => setSearchModalIsOpen(false);
 

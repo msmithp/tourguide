@@ -201,6 +201,10 @@ def add_location(request):
     loc_data = json.loads(request.body)
     loc = None
 
+    # Round latitude and longitude to 6 decimal places for comparison
+    loc_data["latitude"] = round(float(loc_data["latitude"]), 6)
+    loc_data["longitude"] = round(float(loc_data["longitude"]), 6)
+
     # Test if location is already in database
     try:
         # Assume if two locations have the same exact latitude and longitude, they are the same
