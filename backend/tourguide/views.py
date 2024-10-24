@@ -8,7 +8,7 @@ from django.db.models import Min
 import json
 import requests
 
-# Create your views here.
+
 class LocationView(viewsets.ModelViewSet):
     serializer_class = LocationSerializer
     queryset = Location.objects.all()
@@ -20,6 +20,7 @@ class TourView(viewsets.ModelViewSet):
     queryset = Tour.objects.all()
 
 
+@csrf_exempt
 def create_tour(request):
     """ API endpoint to create a tour given the new tour's name """
     # Load data - `request.body` consists of a tour name
@@ -30,7 +31,14 @@ def create_tour(request):
     new_tour = Tour(name=tour_name)
     new_tour.save()
 
-    return HttpResponse(status=200)
+    res = {
+        "id": new_tour.pk,
+        "name": new_tour.name,
+        "created": new_tour.created,
+        "locations": []
+    }
+
+    return JsonResponse(res)
 
 
 def get_tour(request, tour_id):
@@ -92,9 +100,18 @@ def add_to_tour(request):
         # Location is already in tour, so no re-calculation is necessary
         return HttpResponse(status=200)
     
+    index = -1  # Placeholder index before tour recalculation
+
+    # Set index to 0 if tour is blank
+    if not locs:
+        index = 0
+    
     # Add location to tour with placeholder index
-    new_tour_loc = TourLocation(tour_id=tour_id, location_id=location_id, index=-1)
+    new_tour_loc = TourLocation(tour_id=tour_id, location_id=location_id, index=index)
     new_tour_loc.save()
+
+    # Get all locations in tour, again
+    locs = TourLocation.objects.select_related("location").filter(tour=tour_id)
 
     # Turn locations into dictionary of the format: {location_id: (latitude, longitude)}
     locs_dict = {
@@ -139,6 +156,10 @@ def remove_from_tour(request):
     if not TourLocation.objects.filter(location_id=location_id).exists():
         # No other tours include this location, so we can delete it from the database
         Location.objects.get(pk=location_id).delete()
+
+    # If this was the last location in the tour, no need to recalculate
+    if not locs:
+        return HttpResponse(status=200)
 
     # Turn locations into dictionary of the format: {location_id: (latitude, longitude)}
     locs_dict = {
@@ -225,4 +246,3 @@ def add_location(request):
     }
 
     return JsonResponse(loc_dict)
-

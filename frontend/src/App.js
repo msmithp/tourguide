@@ -6,31 +6,6 @@ import LocationRadio from "./components/radio.js";
 import LocationCard from "./components/locationCard.js"
 
 
-const sampleLocations = [
-    {
-        id: 1,
-        name: "Empire State Building",
-        address: "Empire State Building, 350, 5th Avenue, Manhattan Community Board 5, Manhattan, New York County, New York, 10118, United States",
-        latitude: "40.748300",
-        longitude: "-73.985659"
-    },
-    {
-        id: 2,
-        name: "Hood College",
-        address: "Hood College, 401, Rosemont Avenue, Rosedale, Frederick, Frederick County, Maryland, 21701, United States",
-        latitude: "39.422962",
-        longitude: "-77.418917"
-    },
-    {
-        id: 3,
-        name: "Myersville, MD",
-        address: "Myersville, Frederick County, Maryland, United States",
-        latitude: "39.505101",
-        longitude: "-77.566377"
-    }
-];
-
-
 function currentTime() {
     var date = new Date();
     return "" + date.getFullYear() + "-" + ('0' + (date.getMonth() + 1)).slice(-2) + "-" 
@@ -47,11 +22,87 @@ function Dropdown({ tours=[], handler }) {
 
     return (
         <div> {/* TODO: add CSS class */}
-            <select name="selectedTour" onChange={e => handler(e.target.value)}>
+            <select name="selectedTour" defaultValue="default" onChange={e => handler(e.target.value)}>
+                <option disabled value="default">Select a tour</option>
                 {selectItems}
             </select>
         </div>
     )
+}
+
+
+function CreateTourButton({ handler }) {
+    const [isTextBoxShown, setTextBoxShown] = useState(false);
+
+    function handleButtonClick(event) {
+        // Show text box and button
+        event.preventDefault();
+        setTextBoxShown(true);
+    }
+
+    function handleSubmit(event) {
+        // Hide text box and send name to handler
+        event.preventDefault();
+        setTextBoxShown(false);
+        handler(event.target[0].value);
+    }
+
+    function handleCancel(event) {
+        // Hide text box
+        event.preventDefault();
+        setTextBoxShown(false);
+    }
+
+    return (
+        <>
+            {isTextBoxShown ? 
+                <div>
+                    <form onSubmit={(e) => handleSubmit(e)}>
+                        <input type="text" placeholder="Tour name"/>
+                        <input type="submit" value="Create tour"/>
+                        <button onClick={(e) => handleCancel(e)}>Cancel</button>
+                    </form>
+                </div>
+            :
+                <div>
+                    <button onClick={(e) => handleButtonClick(e)}>Create Tour</button>
+                </div>
+            }
+        </>
+    );
+}
+
+
+function DeleteTourButton({ handler }) {
+    const [isOptionsShown, setOptionsShown] = useState(false);
+
+    function handleButtonClick(event) {
+        setOptionsShown(true);
+    }
+
+    function handleSubmit(event) {
+        setOptionsShown(false);
+        handler();
+    }
+
+    function handleCancel(event) {
+        setOptionsShown(false);
+    }
+
+    return (
+        <>
+            {isOptionsShown ?
+                <div>
+                    <button onClick={(e) => handleSubmit(e)}>Delete Tour</button>
+                    <button onClick={(e) => handleCancel(e)}>Cancel</button>
+                </div>
+            :
+                <div>
+                    <button onClick={(e) => handleButtonClick(e)}>Delete Tour</button>
+                </div>
+            }
+        </>
+    );
 }
 
 
@@ -108,18 +159,47 @@ function LocationList({ locations, handler }) {
 
 function LocationSelection({ locations, handler }){
     return (
+        <>
+            {locations.length == 0 ? 
+            <p>No results.</p>
+            :
+            <div>
+                <LocationRadio locations={locations} handler={handler} />
+            </div>
+            }
+        </>
+    )
+}
+
+
+function LoadingScreen() {
+    return (
         <div>
-            <LocationRadio locations={locations} handler={handler} />
+            <p>Loading...</p>
         </div>
     )
 }
 
 
+function DefaultScreen() {
+    return (
+        <div>
+            <h2>No tour selected</h2>
+            <p>Select or create a tour to start.</p>
+        </div>
+    );
+}
+
+
 export default function App() {
+    // Tour data
     const [tours, setTours] = useState([]);
     const [currentTour, setCurrentTour] = useState({});
-    const [searchModalIsOpen, setSearchModalIsOpen] = useState(false);
     const [searchLocations, setSearchLocations] = useState([]);
+
+    // Modals
+    const [searchModalIsOpen, setSearchModalIsOpen] = useState(false);
+    const [loadingModalIsOpen, setLoadingModalIsOpen] = useState(false);
 
     console.log("Rerendering: " + currentTime() + "\nCurrent tour: " + currentTour.name
                 + "\nTour info: " + JSON.stringify(currentTour));
@@ -147,20 +227,26 @@ export default function App() {
         .catch(err => console.log(err));
     }
 
-    function handleGetLocations(query) {
+    async function handleGetLocations(query) {
         // Don't spam the button or something bad might happen
-        if (query == "") {
+        if (query === "") {
             // Ignore blank queries
             return;
         }
+
+        // Display loading screen
+        setLoadingModalIsOpen(true);
 
         // Set search locations to blank first
         setSearchLocations([]);
 
         // Get candidate search locations based on search query
-        axios.get("http://127.0.0.1:8000/api/search/" + query + '/')
+        await axios.get("http://127.0.0.1:8000/api/search/" + query + '/')
         .then((res) => setSearchLocations(res.data.data))
         .catch((err) => console.log(err));
+
+        // Hide loading screen
+        setLoadingModalIsOpen(false);
 
         // Open popup to display locations
         setSearchModalIsOpen(true);
@@ -188,17 +274,42 @@ export default function App() {
         handleTourChange(currentTour.id);
     }
 
+    async function handleCreateTour(name) {
+        // Create tour with a given name
+        await axios.post("http://127.0.0.1:8000/api/create_tour/", {name: name})
+        .then((res) => {
+            axios.get("http://127.0.0.1:8000/api/tours/")
+            .then(res => setTours(res.data));
+
+            handleTourChange(res.id);
+        });
+    }
+
+    async function handleDeleteTour(tour_id) {
+        // Delete tour with a given tour ID
+        console.log("Deleting tour " + currentTour.id);
+
+        // After deletion, default to tour `{}`
+    }
+
     const handleSearchModalClose = () => setSearchModalIsOpen(false);
+    
+    const handleLoadingModalClose = () => setLoadingModalIsOpen(false);
 
     return (
         <main>
             <h1>tourguide</h1>
+            <Modal show={loadingModalIsOpen} onHide={handleLoadingModalClose}>
+                <LoadingScreen />
+            </Modal>
             <Modal show={searchModalIsOpen} onHide={handleSearchModalClose}>
                 <LocationSelection 
                     locations={searchLocations} 
                     handler={handleAddToTour}
                 />
             </Modal>
+            <CreateTourButton handler={handleCreateTour} />
+            <DeleteTourButton handler={handleDeleteTour} />
             <Dropdown 
                 tours={tours}
                 handler={handleTourChange}
@@ -210,6 +321,7 @@ export default function App() {
                     handler={handleRemoveFromTour} 
                 />
             </Sidebar>
+            {/* Map goes here */}
         </main>
     );
 }
