@@ -347,11 +347,19 @@ export default function App() {
                 handler={handleTourChange}
             />
             <Sidebar>
-                <SearchForm handler={handleGetLocations}/>
-                <LocationList
-                    locations={currentTour.locations}
-                    handler={handleRemoveFromTour} 
-                />
+                {isEmpty(currentTour) ?
+                <>
+                    <DefaultScreen />
+                </>
+                :
+                <>
+                    <SearchForm handler={handleGetLocations}/>
+                    <LocationList
+                        locations={currentTour.locations}
+                        handler={handleRemoveFromTour} 
+                    />
+                </>
+                }
             </Sidebar>
             {/* Map goes here */}
         </main>
