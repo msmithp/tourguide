@@ -76,9 +76,25 @@ def get_tour(request, tour_id):
 def delete_tour(request, tour_id):
     """ API endpoint to delete a tour from the Tour table and TourLocation
         table given its ID """
+    # Get tour-location pairs from database
+    locs = TourLocation.objects.select_related("location").filter(tour_id=tour_id)
+
+    # Check each location in the tour to see if it exists in another tour; if
+    # not, delete it from the Location table
+    for loc in locs:
+        # Get associated location ID
+        id = loc.location.pk
+
+        # Delete location from TourLocation table
+        loc.delete()
+
+        # Check if any other tours include this location
+        if not TourLocation.objects.filter(location_id=id).exists():
+            # No other tours include this location, so we can delete it from the database
+            Location.objects.get(pk=id).delete()
+
     # Delete tour with the given ID from the database
     Tour.objects.filter(pk=tour_id).delete()
-    TourLocation.objects.filter(tour_id=tour_id).delete()
 
     return HttpResponse(status=200)
 

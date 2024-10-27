@@ -15,14 +15,15 @@ function currentTime() {
 }
 
 
+function isEmpty(dict) {
+    return Object.keys(dict).length === 0;
+}
+
+
 function Dropdown({ currentTour, tours=[], handler }) {
     const selectItems = tours.map(t =>
         <option key={t.id} value={t.id}>{t.name}</option>
     );
-
-    function isEmpty(dict) {
-        return Object.keys(dict).length === 0;
-    }
 
     return (
         <div> {/* TODO: add CSS class */}
@@ -229,6 +230,13 @@ export default function App() {
 
     async function handleTourChange(tour_id) {
         // Selected tour changed, so change current tour
+        if (tour_id < 1) {
+            // Invalid tour ID, default to {}
+            setCurrentTour({});
+            return;
+        }
+
+        // Get tour data from database
         await axios.get("http://127.0.0.1:8000/api/get_tour/" + tour_id + '/')
         .then(res => setCurrentTour(res.data))
         .catch(err => console.log(err));
@@ -296,12 +304,23 @@ export default function App() {
         });
     }
 
-    async function handleDeleteTour(tour_id) {
-        // Delete tour with a given tour ID
-        // Note: handle case where delete is pressed on empty tour
-        console.log("Deleting tour " + currentTour.id);
+    async function handleDeleteTour() {
+        // Delete current tour
+        if (isEmpty(currentTour)) {
+            // Don't delete the default null tour
+            return;
+        }
+
+        // Delete tour from database
+        await axios.delete("http://127.0.0.1:8000/api/delete_tour/" + currentTour.id + "/");
+
+        // Refresh list of tours
+        await axios.get("http://127.0.0.1:8000/api/tours/")
+        .then((res) => setTours(res.data))
+        .catch((err) => console.log(err));
 
         // After deletion, default to tour `{}`
+        handleTourChange(-1);
     }
 
     const handleSearchModalClose = () => setSearchModalIsOpen(false);

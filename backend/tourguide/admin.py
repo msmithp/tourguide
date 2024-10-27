@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import Location, Tour, TourLocation
 
 class LocationAdmin(admin.ModelAdmin):
-    list_display = ('name', 'address', 'latitude', 'longitude')
+    list_display = ('id', 'name', 'address', 'latitude', 'longitude')
 
 
 class TourAdmin(admin.ModelAdmin):
