@@ -15,14 +15,21 @@ function currentTime() {
 }
 
 
-function Dropdown({ tours=[], handler }) {
+function Dropdown({ currentTour, tours=[], handler }) {
     const selectItems = tours.map(t =>
         <option key={t.id} value={t.id}>{t.name}</option>
     );
 
+    function isEmpty(dict) {
+        return Object.keys(dict).length === 0;
+    }
+
     return (
         <div> {/* TODO: add CSS class */}
-            <select name="selectedTour" defaultValue="default" onChange={e => handler(e.target.value)}>
+            <select 
+                name="selectedTour"
+                value={isEmpty(currentTour) ? "default" : currentTour.id}
+                onChange={e => handler(e.target.value)}>
                 <option disabled value="default">Select a tour</option>
                 {selectItems}
             </select>
@@ -277,16 +284,21 @@ export default function App() {
     async function handleCreateTour(name) {
         // Create tour with a given name
         await axios.post("http://127.0.0.1:8000/api/create_tour/", {name: name})
-        .then((res) => {
+        .then((newTour) => {
             axios.get("http://127.0.0.1:8000/api/tours/")
-            .then(res => setTours(res.data));
+            .then((res) => {
+                // Refresh list of tours
+                setTours(res.data);
 
-            handleTourChange(res.id);
+                // Set current tour to newly created tour
+                handleTourChange(newTour.data.id);
+            });
         });
     }
 
     async function handleDeleteTour(tour_id) {
         // Delete tour with a given tour ID
+        // Note: handle case where delete is pressed on empty tour
         console.log("Deleting tour " + currentTour.id);
 
         // After deletion, default to tour `{}`
@@ -310,7 +322,8 @@ export default function App() {
             </Modal>
             <CreateTourButton handler={handleCreateTour} />
             <DeleteTourButton handler={handleDeleteTour} />
-            <Dropdown 
+            <Dropdown
+                currentTour={currentTour}
                 tours={tours}
                 handler={handleTourChange}
             />
