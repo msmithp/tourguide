@@ -4,6 +4,9 @@ import axios from "axios";
 import { Modal } from "react-bootstrap";
 import LocationRadio from "./components/radio.js";
 import LocationCard from "./components/locationCard.js"
+import 'leaflet/dist/leaflet.css'
+import {MapContainer, TileLayer, Marker, Popup} from 'react-leaflet'
+import L from 'leaflet'
 
 
 function currentTime() {
@@ -26,7 +29,7 @@ function Dropdown({ currentTour, tours=[], handler }) {
     );
 
     return (
-        <div> {/* TODO: add CSS class */}
+        <div className="dropdown">
             <select 
                 name="selectedTour"
                 value={isEmpty(currentTour) ? "default" : currentTour.id}
@@ -62,7 +65,7 @@ function CreateTourButton({ handler }) {
     }
 
     return (
-        <>
+        <div className="createTourButton">
             {isTextBoxShown ? 
                 <div>
                     <form onSubmit={(e) => handleSubmit(e)}>
@@ -76,7 +79,7 @@ function CreateTourButton({ handler }) {
                     <button onClick={(e) => handleButtonClick(e)}>Create Tour</button>
                 </div>
             }
-        </>
+        </div>
     );
 }
 
@@ -116,7 +119,7 @@ function DeleteTourButton({ handler }) {
 
 function Sidebar({ children }) {
     return (
-        <div> {/* TODO: add CSS class */}
+        <div className="sidebar">
             {children}
         </div>
     )
@@ -141,7 +144,7 @@ function SearchForm({ handler }) {
 
 
 function LocationList({ locations, handler }) {
-    if (locations == null) {  // TODO: Handle empty case (prompt user to select a tour)
+    if (locations == null) {
         return <div></div>
     }
 
@@ -158,7 +161,7 @@ function LocationList({ locations, handler }) {
     );
 
     return (
-        <div> {/* TODO: add CSS class */}
+        <div className="locationList">
             <ul>{listItems}</ul>    
         </div>
     );
@@ -168,7 +171,7 @@ function LocationList({ locations, handler }) {
 function LocationSelection({ locations, handler }){
     return (
         <>
-            {locations.length == 0 ? 
+            {locations.length === 0 ? 
             <p>No results.</p>
             :
             <div>
@@ -329,7 +332,6 @@ export default function App() {
 
     return (
         <main>
-            <h1>tourguide</h1>
             <Modal show={loadingModalIsOpen} onHide={handleLoadingModalClose}>
                 <LoadingScreen />
             </Modal>
@@ -339,14 +341,17 @@ export default function App() {
                     handler={handleAddToTour}
                 />
             </Modal>
-            <CreateTourButton handler={handleCreateTour} />
-            <DeleteTourButton handler={handleDeleteTour} />
-            <Dropdown
-                currentTour={currentTour}
-                tours={tours}
-                handler={handleTourChange}
-            />
             <Sidebar>
+                <div className="header">
+                    <h1>tourguide</h1>
+                    <CreateTourButton handler={handleCreateTour} />
+                    <DeleteTourButton handler={handleDeleteTour} />
+                    <Dropdown
+                        currentTour={currentTour}
+                        tours={tours}
+                        handler={handleTourChange}
+                    />
+                </div>
                 {isEmpty(currentTour) ?
                 <>
                     <DefaultScreen />
@@ -361,7 +366,17 @@ export default function App() {
                 </>
                 }
             </Sidebar>
-            {/* Map goes here */}
+            <MapContainer
+                className="map"
+                zoom={6}
+                center={[39.422962, -77.418918]}
+            >
+                <TileLayer 
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+
+            </MapContainer>
         </main>
     );
 }
