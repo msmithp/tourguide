@@ -8,6 +8,8 @@
     height: 100vh;
     width: 40%;
     float: left;
+    padding: 10px;
+    overflow-y: scroll;
 }
 
 .map {

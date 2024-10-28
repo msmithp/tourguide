@@ -3,10 +3,17 @@ import "./App.css";
 import axios from "axios";
 import { Modal } from "react-bootstrap";
 import LocationRadio from "./components/radio.js";
-import LocationCard from "./components/locationCard.js"
-import 'leaflet/dist/leaflet.css'
-import {MapContainer, TileLayer, Marker, Popup} from 'react-leaflet'
-import L from 'leaflet'
+import LocationCard from "./components/locationCard.js";
+import 'leaflet/dist/leaflet.css';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import L from "leaflet";
+
+// Configure Leaflet marker icons
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
+  iconUrl: require('leaflet/dist/images/marker-icon.png'),
+  shadowUrl: require('leaflet/dist/images/marker-shadow.png')
+});
 
 
 function currentTime() {
@@ -330,6 +337,22 @@ export default function App() {
     
     const handleLoadingModalClose = () => setLoadingModalIsOpen(false);
 
+    function getPolyline(locations) {
+        // Get ordered list of points for polyline in map
+        if (locations.length <= 1 || locations === null) {
+            return [];
+        }
+
+        var line = [];
+        for (var i = 0; i < locations.length; i++) {
+            line.push([locations[i].latitude, locations[i].longitude]);
+        }
+
+        line.push([locations[0].latitude, locations[0].longitude])
+
+        return line;
+    }
+
     return (
         <main>
             <Modal show={loadingModalIsOpen} onHide={handleLoadingModalClose}>
@@ -370,12 +393,30 @@ export default function App() {
                 className="map"
                 zoom={6}
                 center={[39.422962, -77.418918]}
+                maxBounds={[[-85.06, -180], [85.06, 180]]}
             >
                 <TileLayer 
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">
+                        OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-
+                {isEmpty(currentTour) ? (
+                    <></> 
+                ) : (
+                    <>
+                        {currentTour.locations.map(loc => (
+                            <Marker
+                                key={loc.id}
+                                position={[loc.latitude, loc.longitude]}
+                            >
+                                <Popup>
+                                    {loc.name}
+                                </Popup>
+                            </Marker>
+                        ))}
+                        <Polyline positions={getPolyline(currentTour.locations)}/>
+                    </>
+                )}
             </MapContainer>
         </main>
     );
