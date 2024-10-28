@@ -5,7 +5,7 @@ import { Modal } from "react-bootstrap";
 import LocationRadio from "./components/radio.js";
 import LocationCard from "./components/locationCard.js";
 import 'leaflet/dist/leaflet.css';
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from "leaflet";
 
 // Configure Leaflet marker icons
@@ -208,6 +208,19 @@ function DefaultScreen() {
     );
 }
 
+function InnerMap({ locations }) {
+    const map = useMap();
+
+    useEffect(() => {
+        if (locations.length > 0) {
+            const bounds = locations.map(loc => [loc.latitude, loc.longitude]);
+            map.fitBounds(bounds, {padding: [50, 50]});
+        }
+    }, [locations, map])
+
+    return null;
+}
+
 
 export default function App() {
     // Tour data
@@ -339,15 +352,17 @@ export default function App() {
 
     function getPolyline(locations) {
         // Get ordered list of points for polyline in map
-        if (locations.length <= 1 || locations === null) {
+        if (locations === null || locations.length <= 1) {
             return [];
         }
 
-        var line = [];
-        for (var i = 0; i < locations.length; i++) {
+        // Push each [lat, lon] pair to the line
+        let line = [];
+        for (let i = 0; i < locations.length; i++) {
             line.push([locations[i].latitude, locations[i].longitude]);
         }
 
+        // Loop back to start
         line.push([locations[0].latitude, locations[0].longitude])
 
         return line;
@@ -392,8 +407,11 @@ export default function App() {
             <MapContainer
                 className="map"
                 zoom={6}
+                minZoom={3}
                 center={[39.422962, -77.418918]}
                 maxBounds={[[-85.06, -180], [85.06, 180]]}
+                // bounds={isEmpty(currentTour) ? [] : getBounds(currentTour.locations)}
+                // boundsOptions={{padding: [50, 50]}}
             >
                 <TileLayer 
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">
@@ -415,6 +433,7 @@ export default function App() {
                             </Marker>
                         ))}
                         <Polyline positions={getPolyline(currentTour.locations)}/>
+                        <InnerMap locations={currentTour.locations} />
                     </>
                 )}
             </MapContainer>
