@@ -76,8 +76,8 @@ function CreateTourButton({ handler }) {
             {isTextBoxShown ? 
                 <div>
                     <form onSubmit={(e) => handleSubmit(e)}>
-                        <input type="text" placeholder="Tour name"/>
-                        <input type="submit" value="Create tour"/>
+                        <input type="text" placeholder="Tour name" style={{width: "40%"}}/>
+                        <input type="submit" value="Create Tour"/>
                         <button onClick={(e) => handleCancel(e)}>Cancel</button>
                     </form>
                 </div>
@@ -111,7 +111,7 @@ function DeleteTourButton({ handler }) {
         <>
             {isOptionsShown ?
                 <div>
-                    <button onClick={(e) => handleSubmit(e)}>Delete Tour</button>
+                    <button className="deleteButton" onClick={(e) => handleSubmit(e)}>Delete Tour</button>
                     <button onClick={(e) => handleCancel(e)}>Cancel</button>
                 </div>
             :
@@ -140,12 +140,14 @@ function SearchForm({ handler }) {
     }
 
     return (
-        <form onSubmit={(e) => handleSubmit(e)}>
-            <label>Enter location to add:
-                <input type="text"/>
-            </label>
-            <input type="submit" />
-        </form>
+        <div className="searchForm">
+            <form onSubmit={(e) => handleSubmit(e)}>
+                <label>Add a location:
+                    <input type="text" placeholder="Search..."/>
+                </label>
+                <input type="submit" />
+            </form>
+        </div>
     )
 }
 
@@ -163,7 +165,7 @@ function LocationList({ locations, handler }) {
                 latitude={loc.latitude}
                 longitude={loc.longitude}
             />
-            <button onClick={e => handler(loc.id)}>Remove</button>
+            <button className="removeButton" onClick={e => handler(loc.id)}>Remove</button>
         </li>
     );
 
@@ -209,6 +211,7 @@ function DefaultScreen() {
 }
 
 function InnerMap({ locations }) {
+    // Inner map component to handle bounds fitting
     const map = useMap();
 
     useEffect(() => {
@@ -232,8 +235,8 @@ export default function App() {
     const [searchModalIsOpen, setSearchModalIsOpen] = useState(false);
     const [loadingModalIsOpen, setLoadingModalIsOpen] = useState(false);
 
-    console.log("Rerendering: " + currentTime() + "\nCurrent tour: " + currentTour.name
-                + "\nTour info: " + JSON.stringify(currentTour));
+    // console.log("Rerendering: " + currentTime() + "\nCurrent tour: " + currentTour.name
+    //             + "\nTour info: " + JSON.stringify(currentTour));
 
     useEffect(() => {
         // Set tours upon page load
@@ -381,14 +384,18 @@ export default function App() {
             </Modal>
             <Sidebar>
                 <div className="header">
-                    <h1>tourguide</h1>
-                    <CreateTourButton handler={handleCreateTour} />
-                    <DeleteTourButton handler={handleDeleteTour} />
-                    <Dropdown
-                        currentTour={currentTour}
-                        tours={tours}
-                        handler={handleTourChange}
-                    />
+                    <div>
+                        <h1 className="logo">tourguide</h1>
+                        <Dropdown
+                            currentTour={currentTour}
+                            tours={tours}
+                            handler={handleTourChange}
+                        />
+                    </div>
+                    <div className="buttons">
+                        <CreateTourButton handler={handleCreateTour} />
+                        <DeleteTourButton handler={handleDeleteTour} />
+                    </div>
                 </div>
                 {isEmpty(currentTour) ?
                 <>
@@ -410,8 +417,6 @@ export default function App() {
                 minZoom={3}
                 center={[39.422962, -77.418918]}
                 maxBounds={[[-85.06, -180], [85.06, 180]]}
-                // bounds={isEmpty(currentTour) ? [] : getBounds(currentTour.locations)}
-                // boundsOptions={{padding: [50, 50]}}
             >
                 <TileLayer 
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">

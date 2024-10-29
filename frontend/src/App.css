@@ -1,9 +1,26 @@
 :root {
     --bg-color: white;
+    --card-color: rgb(240, 240, 240);
+    --remove-color: rgb(236, 48, 48);
+    --card-color-hover: rgb(233, 233, 233);
+    --confirm-color: rgb(60, 85, 228);
+    --confirm-color-hover: rgb(89, 111, 236);
+}
+
+body, html {
+    font-family: "Lexend", sans-serif;
+}
+
+h1 {
+    font-size: 2em;
+    font-weight: 800;
+}
+
+h5 {
+    font-weight: 600;
 }
 
 .sidebar {
-    /* TODO: Add interior scroll bar */
     background-color: var(--bg-color);
     height: 100vh;
     width: 40%;
@@ -15,13 +32,104 @@
 .map {
     height: 100vh;
     width: 60%;
-    /* float: left; */
+}
+
+.locationList ul {
+    list-style-type: none;
+    position: relative;
+    padding: 0;
+}
+
+.locationList li {
+    margin-bottom: 0.5rem;
+    border-radius: 1.2rem;
+    padding: 1.2rem;
+    background-color: var(--card-color);
+    transition: 0.15s;
+}
+
+.locationList li:hover {
+    background-color: var(--card-color-hover);
+    transition: 0.05s;
+}
+
+button, input[type=submit] {
+    border-radius: 0.8rem;
+    font-weight: 300;
+    padding-top: 0.2rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    padding-bottom: 0.2rem;
+    margin: 0.2rem;
+}
+
+input[type=submit] {
+    background-color: var(--confirm-color);
+    transition: 0.2s;
+    color: white;
+}
+
+input[type=submit]:hover {
+    background-color: var(--confirm-color-hover);
+    transition: 0.07s;
+}
+
+input[type=text] {
+    border-radius: 0.8rem;
+    padding: 0.2rem;
+}
+
+.removeButton {
+    background-color: transparent;
+    border: none;
+    border-radius: 0.3rem;
+    color: var(--remove-color);
+    text-decoration: underline;
+    padding: 0.3rem;
+    margin: 0;
+    margin-left: -0.3rem;
+    margin-top: -0.5rem;
+}
+
+.removeButton:hover {
+    background-color: var(--remove-color);
+    color: white;
+}
+
+.deleteButton {
+    background-color: var(--remove-color);
+    font-weight: 400;
 }
 
 .header {
-    height: 20vh;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.8rem;
 }
 
-.createTourButton {
-    float: left;
+.logo {
+    width: 40%;
+}
+
+.buttons {
+    display: grid;
+    grid-auto-flow: row;
+    grid-gap: 5px;
+    text-align: right;
+    justify-content: end;
+}
+
+.searchForm {
+    margin-bottom: 0.5rem;
+}
+
+.searchForm input {
+    margin-left: 0.3em;
+}
+
+.dropdown select {
+    width: 100%;
+    border-radius: 1em;
+    padding: 0.2em;
 }
