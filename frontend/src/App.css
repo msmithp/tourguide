@@ -1,4 +1,5 @@
 :root {
+    /* Color variables */
     --bg-color: white;
     --card-color: rgb(234, 234, 234);
     --card-color-hover: rgb(226, 226, 226);
@@ -128,7 +129,7 @@ input[type=text] {
 
 .logo {
     width: 40%;
-    max-width: 10em;
+    max-width: 10rem;
 }
 
 .buttons {
@@ -144,7 +145,7 @@ input[type=text] {
 }
 
 .searchForm input {
-    margin-left: 0.3em;
+    margin-left: 0.3rem;
 }
 
 .dropdown select {
@@ -154,7 +155,7 @@ input[type=text] {
     background-color: var(--card-color);
     transition: background-color 0.12s;
     text-overflow: ellipsis;
-    max-width: 10em;
+    max-width: 10rem;
 }
 
 .dropdown select:hover {
@@ -179,15 +180,15 @@ input[type=text] {
 }
 
 .buttonOption {
-    border-radius: 1em;
-    margin-bottom: 0.7em;
+    border-radius: 1rem;
+    margin-bottom: 0.7rem;
     background-color: var(--card-color);
     transition: background-color 0.05s;
 }
 
 .selectedButtonOption {
-    border-radius: 1em;
-    margin-bottom: 0.7em;
+    border-radius: 1rem;
+    margin-bottom: 0.7rem;
     background-color: var(--card-color);
     transition: background-color 0.05s;
     outline: solid 5px var(--confirm-color);
@@ -205,5 +206,6 @@ input[type=text] {
 
 .radio label {
     cursor: pointer;
-    padding: 1.2em;
+    padding: 1.2rem;
+    min-width: 27.15rem;  /* Workaround for addresses with one line */
 }

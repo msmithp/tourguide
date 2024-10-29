@@ -182,7 +182,7 @@ function LocationSelection({ locations, handler }){
     return (
         <div className="locationSelection">
             {locations.length === 0 ? 
-            <p>No results.</p>
+            <p style={{textAlign: "center"}}>No results.</p>
             :
             <div>
                 <LocationRadio locations={locations} handler={handler} />
@@ -210,6 +210,7 @@ function DefaultScreen() {
         </div>
     );
 }
+
 
 function InnerMap({ locations }) {
     // Inner map component to handle bounds fitting
@@ -420,7 +421,7 @@ export default function App() {
             <MapContainer
                 className="map"
                 zoom={6}
-                minZoom={3}
+                minZoom={2}
                 center={[39.422962, -77.418918]}
                 maxBounds={[[-85.06, -180], [85.06, 180]]}
             >
