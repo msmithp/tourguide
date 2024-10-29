@@ -1,8 +1,9 @@
 :root {
     --bg-color: white;
-    --card-color: rgb(240, 240, 240);
+    --card-color: rgb(234, 234, 234);
+    --card-color-hover: rgb(226, 226, 226);
     --remove-color: rgb(236, 48, 48);
-    --card-color-hover: rgb(233, 233, 233);
+    --remove-color-hover: rgb(209, 38, 38);
     --confirm-color: rgb(60, 85, 228);
     --confirm-color-hover: rgb(89, 111, 236);
 }
@@ -57,21 +58,29 @@ button, input[type=submit] {
     border-radius: 0.8rem;
     font-weight: 300;
     padding-top: 0.2rem;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
+    padding-left: 0.7rem;
+    padding-right: 0.7rem;
     padding-bottom: 0.2rem;
     margin: 0.2rem;
+    border: none;
+    background-color: var(--card-color);
+    transition: 0.12s;
+}
+
+button:hover {
+    background-color: var(--card-color-hover);
+    transition: 0.04s;
 }
 
 input[type=submit] {
     background-color: var(--confirm-color);
-    transition: 0.2s;
+    transition: 0.12s;
     color: white;
 }
 
 input[type=submit]:hover {
     background-color: var(--confirm-color-hover);
-    transition: 0.07s;
+    transition: 0.04s;
 }
 
 input[type=text] {
@@ -89,16 +98,25 @@ input[type=text] {
     margin: 0;
     margin-left: -0.3rem;
     margin-top: -0.5rem;
+    transition: background-color 0.08s;
 }
 
 .removeButton:hover {
     background-color: var(--remove-color);
     color: white;
+    transition: 0.08s;
 }
 
 .deleteButton {
     background-color: var(--remove-color);
     font-weight: 400;
+    transition: background-color 0.12s;
+}
+
+.deleteButton:hover {
+    background-color: var(--remove-color-hover);
+    font-weight: 400;
+    transition: background-color 0.04s;
 }
 
 .header {
@@ -110,6 +128,7 @@ input[type=text] {
 
 .logo {
     width: 40%;
+    max-width: 10em;
 }
 
 .buttons {
@@ -132,4 +151,59 @@ input[type=text] {
     width: 100%;
     border-radius: 1em;
     padding: 0.2em;
+    background-color: var(--card-color);
+    transition: background-color 0.12s;
+    text-overflow: ellipsis;
+    max-width: 10em;
+}
+
+.dropdown select:hover {
+    background-color: var(--card-color-hover);
+    transition: background-color 0.04s;
+}
+
+.loadingScreen {
+    text-align: center;
+}
+
+.loadingScreen p {
+    padding: 2rem;
+}
+
+.locationSelection {
+    padding: 2rem;
+}
+
+.locationSelection input[type=radio] {
+    display: none;
+}
+
+.buttonOption {
+    border-radius: 1em;
+    margin-bottom: 0.7em;
+    background-color: var(--card-color);
+    transition: background-color 0.05s;
+}
+
+.selectedButtonOption {
+    border-radius: 1em;
+    margin-bottom: 0.7em;
+    background-color: var(--card-color);
+    transition: background-color 0.05s;
+    outline: solid 5px var(--confirm-color);
+}
+
+.buttonOption:hover {
+    background-color: var(--card-color-hover);
+    transition: background-color 0.15s;
+}
+
+.selectedButtonOption:hover {
+    background-color: var(--card-color-hover);
+    transition: background-color 0.15s;
+}
+
+.radio label {
+    cursor: pointer;
+    padding: 1.2em;
 }

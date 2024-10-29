@@ -14,19 +14,21 @@ export default function LocationRadio({ locations, handler }) {
     }
 
     const buttons = locations.map(loc => 
-        <RadioButton
-            value={loc.id}
-            key={loc.id}
-            isChecked={selected === loc.id}
-            handleChange={handleChange}
-        >
-            <LocationCard
-                name={loc.name}
-                address={loc.address}
-                latitude={loc.latitude}
-                longitude={loc.longitude}
-            />
-        </RadioButton>
+        <div className={selected === loc.id ? "selectedButtonOption" : "buttonOption"}>
+            <RadioButton
+                value={loc.id}
+                key={loc.id}
+                isChecked={selected === loc.id}
+                handleChange={handleChange}
+            >
+                <LocationCard
+                    name={loc.name}
+                    address={loc.address}
+                    latitude={loc.latitude}
+                    longitude={loc.longitude}
+                />
+            </RadioButton>
+        </div>
     );
 
     return (
@@ -46,7 +48,7 @@ function RadioButton({ value, isChecked, handleChange, children }) {
     };
 
     return (
-        <div>
+        <div className="radio">
             <input
                 type="radio"
                 id={value}

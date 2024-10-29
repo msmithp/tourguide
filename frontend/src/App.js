@@ -157,8 +157,9 @@ function LocationList({ locations, handler }) {
         return <div></div>
     }
 
-    const listItems = locations.map(loc => 
+    const listItems = locations.map((loc, index) => 
         <li key={loc.id} value={loc.id}>
+            {/* <p>{index}</p> */}
             <LocationCard 
                 name={loc.name}
                 address={loc.address}
@@ -179,7 +180,7 @@ function LocationList({ locations, handler }) {
 
 function LocationSelection({ locations, handler }){
     return (
-        <>
+        <div className="locationSelection">
             {locations.length === 0 ? 
             <p>No results.</p>
             :
@@ -187,14 +188,14 @@ function LocationSelection({ locations, handler }){
                 <LocationRadio locations={locations} handler={handler} />
             </div>
             }
-        </>
+        </div>
     )
 }
 
 
 function LoadingScreen() {
     return (
-        <div>
+        <div className="loadingScreen">
             <p>Loading...</p>
         </div>
     )
@@ -316,7 +317,12 @@ export default function App() {
     }
 
     async function handleCreateTour(name) {
-        // Create tour with a given name
+        if (name.length > 100) {
+            // Truncate names longer than 100 characters
+            name = name.substring(0, 100);
+        }
+
+        // Create tour with given name
         await axios.post("http://127.0.0.1:8000/api/create_tour/", {name: name})
         .then((newTour) => {
             axios.get("http://127.0.0.1:8000/api/tours/")
