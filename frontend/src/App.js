@@ -76,8 +76,8 @@ function CreateTourButton({ handler }) {
             {isTextBoxShown ? 
                 <div>
                     <form onSubmit={(e) => handleSubmit(e)}>
-                        <input type="text" placeholder="Tour name" style={{width: "40%"}}/>
-                        <input type="submit" value="Create Tour"/>
+                        <input type="text" placeholder="Tour name" style={{width: "13vw"}}/>
+                        <input type="submit" value="Create"/>
                         <button onClick={(e) => handleCancel(e)}>Cancel</button>
                     </form>
                 </div>
@@ -159,14 +159,18 @@ function LocationList({ locations, handler }) {
 
     const listItems = locations.map((loc, index) => 
         <li key={loc.id} value={loc.id}>
-            {/* <p>{index}</p> */}
-            <LocationCard 
-                name={loc.name}
-                address={loc.address}
-                latitude={loc.latitude}
-                longitude={loc.longitude}
-            />
-            <button className="removeButton" onClick={e => handler(loc.id)}>Remove</button>
+            <div>
+                <LocationCard 
+                    name={loc.name}
+                    address={loc.address}
+                    latitude={loc.latitude}
+                    longitude={loc.longitude}
+                />
+                <button className="removeButton" onClick={e => handler(loc.id)}>Remove</button>
+                <div className="locationNumber">
+                    <p><em>{index+1}</em></p>
+                </div>
+            </div>
         </li>
     );
 
